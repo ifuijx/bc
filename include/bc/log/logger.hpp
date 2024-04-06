@@ -50,7 +50,7 @@ public:
         ++ref_;
         background_worker().append(*this, record {
             .timestamp = std::chrono::system_clock::now(),
-            .level = level,
+            .lv = level,
             .topic = topic_,
             .tid = gettid(),
             .location = location,

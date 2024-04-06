@@ -86,7 +86,7 @@ public:
             throw utils::trans_error_code(errno);
         }
         for (auto &ev : evs_ | std::ranges::views::take(nfds)) {
-            log::debug("got epoll event, fd: {}, event: {}", ev.data.fd, ev.events);
+            log::debug("got epoll event, fd: {}, event: {}", static_cast<int>(ev.data.fd), static_cast<int>(ev.events));
             handler(ev.data.fd, static_cast<event>(ev.events));
         }
     }

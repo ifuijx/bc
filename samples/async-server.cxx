@@ -31,12 +31,12 @@ auto async_session(network::socket<proto> &sock) -> task<> {
 
 struct client {
     network::socket<network::protocol::TCP> sock;
-    task<> task;
+    task<> t;
 };
 
 auto add_client(list<client> &clients, network::socket<network::protocol::TCP> &&sock) {
     clients.emplace_back(std::move(sock));
-    clients.back().task = std::move(async_session(clients.back().sock));
+    clients.back().t = std::move(async_session(clients.back().sock));
 }
 
 auto async_server() -> task<> {
@@ -57,7 +57,7 @@ auto async_server() -> task<> {
         }
         auto it = clients.begin();
         while (it != clients.end()) {
-            if (it->task.done()) {
+            if (it->t.done()) {
                 clients.erase(it++);
                 fmt::print("remove a client\n");
             }

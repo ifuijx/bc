@@ -61,7 +61,7 @@ auto worker::drain_(logs &logs, std::vector<waiter> &waiters) -> void {
         if (!buffers.contains(&logger)) {
             logger.reference_();
         }
-        buffers[&logger] += logger.formatter().format(record.timestamp, record.level, record.topic, record.tid, record.location, record.message);
+        buffers[&logger] += logger.formatter().format(record.timestamp, record.lv, record.topic, record.tid, record.location, record.message);
         buffers[&logger] += "\n";
         logger.unreference_();
     }

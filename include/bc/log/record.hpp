@@ -28,7 +28,7 @@ inline auto operator <=>(level l, level r) -> std::strong_ordering {
 
 struct record {
     std::chrono::system_clock::time_point timestamp;
-    level level;
+    level lv;
     std::string_view topic;
     pid_t tid;
     std::source_location location;
