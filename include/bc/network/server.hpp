@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef __BC_NETWORK_SERVER_H__
+#define __BC_NETWORK_SERVER_H__
+
 #include <cstdint>
 #include <functional>
 #include <list>
@@ -9,13 +12,10 @@
 
 #include "socket.hpp"
 
-#ifndef __BC_NETWORK_SERVER_H__
-#define __BC_NETWORK_SERVER_H__
-
 namespace bc::network {
 
 template <protocol Protocol, domain Domain>
-class server : private bc::utils::noncopyable {
+class server : private utils::noncopyable {
     constexpr static std::size_t s_backlog = 100;
 
     struct client {

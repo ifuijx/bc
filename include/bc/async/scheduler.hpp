@@ -1,13 +1,12 @@
 #pragma once
 
-#include <bit>
-#include <bits/chrono.h>
 #ifndef __BC_ASYNC_SCHEDULER_H__
 #define __BC_ASYNC_SCHEDULER_H__
 
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cerrno>
 #include <chrono>
@@ -180,14 +179,14 @@ private:
             while (it != list.end()) {
                 if (it->ev & e) {
                     it->revent = e;
-                    bool finished = std::visit(utils::overload([](std::coroutine_handle<> handle) {
+                    bool ready = std::visit(utils::overload([](std::coroutine_handle<> handle) {
                         handle.resume();
                         return true;
                     }, [](auto &proxy) {
                         return proxy();
                     }), it->next);
-                    log::debug("resume coroutine / proxy, fd: {}, events: {}, revent: {}, finished: {}", fd, it->ev, e, finished);
-                    if (finished) {
+                    log::debug("resume coroutine / proxy, fd: {}, events: {}, revent: {}, finished: {}", fd, it->ev, e, ready);
+                    if (ready) {
                         list.erase(it++);
                         --coro_count_;
                     }

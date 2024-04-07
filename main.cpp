@@ -21,7 +21,7 @@ auto main() -> int {
             if (read_res) {
                 auto write_res = co_await network::async_write(sock, {buffer.data(), read_res.value()});
                 if (!write_res) {
-                    log::error("unexpected write error, message: {}", read_res.error().message());
+                    log::error("unexpected write error, message: {}", write_res.error().message());
                     break;
                 }
             }
