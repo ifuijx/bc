@@ -80,16 +80,15 @@ public:
         }
     }
 
-    template <domain Domain>
-    auto bind(address<Domain> const &addr) -> void {
-        use_domain_(Domain);
+    auto bind(address const &addr) -> void {
+        use_domain_(addr.domain());
         int reuse = 1;
         if (::setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
             log::error("failed to set reuse option, fd: {}, errno: {}, message: {}", fd_, errno, ::strerror(errno));
             throw utils::trans_error_code(errno);
         }
         if (::bind(fd_, addr.sockaddr(), addr.socklen()) == -1) {
-            log::error("failed to bind socket to {}, fd: {}, errno: {}, message: {}", addr.expr(), fd_, errno, ::strerror(errno));
+            log::error("failed to bind socket to {}, fd: {}, errno: {}, message: {}", addr, fd_, errno, ::strerror(errno));
             throw utils::trans_error_code(errno);
         }
     }
@@ -103,14 +102,13 @@ public:
         role_ = role::SERVER;
     }
 
-    template <domain Domain>
-    auto listen(address<Domain> const &addr, std::size_t backlog) -> void {
+    auto listen(address const &addr, std::size_t backlog) -> void {
         bind(addr);
         listen(backlog);
     }
 
     template <domain Domain>
-    auto connect(address<Domain> const &addr) -> void {
+    auto connect(address const &addr) -> void {
         if (fd_ == 0) {
             use_domain_(Domain);
         }
@@ -119,7 +117,7 @@ public:
             assert(role_ == role::UNDETERMINED);
         }
         if (::connect(fd_, addr.sockaddr(), addr.socklen()) == -1) {
-            log::error("failed to connect socket to {}, fd: {}, errno: {}, message: {}", addr.expr(), fd_, errno, ::strerror(errno));
+            log::error("failed to connect socket to {}, fd: {}, errno: {}, message: {}", addr, fd_, errno, ::strerror(errno));
             throw utils::trans_error_code(errno);
         }
         role_ = role::PEER;

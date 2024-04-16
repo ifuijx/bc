@@ -39,6 +39,7 @@ enum errc {
     quota_exceeded = EDQUOT, // 122
     epoll_error = 200,
     closed_by_peer = 201,
+    invalid_address = 202,
 };
 
 class bc_error_category : public std::error_category {
@@ -103,6 +104,8 @@ public:
                 return "epoll error";
             case closed_by_peer:
                 return "closed by peer";
+            case invalid_address:
+                return "invalid address";
             default:
                 abort();
         }

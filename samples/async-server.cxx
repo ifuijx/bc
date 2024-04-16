@@ -41,7 +41,7 @@ auto add_client(list<client> &clients, network::socket<network::protocol::TCP> &
 
 auto async_server() -> task<> {
     list<client> clients;
-    network::address<network::domain::IPv4> address("127.0.0.1"sv, 12345);
+    network::address address("127.0.0.1"sv, 12345);
     auto sock = network::socket<network::protocol::TCP>{};
     sock.listen(address, 10);
     while (true) {

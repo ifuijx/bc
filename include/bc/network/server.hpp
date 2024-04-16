@@ -72,7 +72,7 @@ private:
     }
 
 private:
-    address<Domain> address_;
+    address address_;
     std::function<auto (socket<Protocol> &) -> async::task<>> handler_;
     async::task<> task_;
     std::list<client> clients_;

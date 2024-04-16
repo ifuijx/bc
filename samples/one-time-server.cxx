@@ -13,7 +13,7 @@ using namespace bc::async;
 auto async_one_time_server() -> task<> {
     list<network::socket<network::protocol::TCP>> clients;
     list<task<>> tasks;
-    network::address<bc::network::domain::IPv4> address("127.0.0.1"sv, 12345);
+    network::address address("127.0.0.1"sv, 12345);
     network::socket<network::protocol::TCP> sock;
     sock.listen(address, 10);
     auto client = co_await network::async_accept(sock);
