@@ -39,6 +39,68 @@ enum class role {
     PEER,
 };
 
+namespace detail {
+
+class async_connect_awaiter {
+public:
+    async_connect_awaiter(int fd, address const &addr) : fd_(fd), addr_(addr) {}
+
+    auto await_ready() -> bool {
+        while (true) {
+            if (::connect(fd_, addr_.sockaddr(), addr_.socklen()) == -1) {
+                if (errno == EINTR) {
+                    log::info("connect returns negligible error, fd: {}, errno: {}, message: {}", fd_, errno, ::strerror(errno));
+                    continue;
+                }
+                else if (errno == EINPROGRESS) {
+                    return false;
+                }
+                log::error("failed to connect, fd: {}, errno: {}, message: {}", fd_, errno, ::strerror(errno));
+                throw;
+            }
+            else {
+                return true;
+            }
+        }
+    }
+
+    auto await_suspend(std::coroutine_handle<> handle) noexcept {
+        async::default_scheduler().post_coro(fd_,
+            async::WRITE | async::ERROR | async::HANGUP,
+            revent_,
+            handle
+        );
+        return true;
+    }
+
+    auto await_resume() noexcept -> bool {
+        log::debug("async write awaiter resume, fd: {}, revent: {}", fd_, revent_);
+        if (revent_ & async::ERROR) {
+            return false;
+        }
+        else if (revent_ & (async::HANGUP | async::RDHANGUP)) {
+            return false;
+        }
+        auto res = ::connect(fd_, addr_.sockaddr(), addr_.socklen());
+        if (res == -1) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+                log::info("connect returns negligible error, fd: {}, errno: {}, message: {}", fd_, errno, ::strerror(errno));
+                return false;
+            }
+            log::error("failed to connect, fd: {}, errno: {}, message: {}", fd_, errno, ::strerror(errno));
+            return false;
+        }
+        return true;
+    }
+
+private:
+    int fd_;
+    address addr_;
+    async::event revent_ {async::NONE};
+};
+
+}
+
 template <protocol proto>
 class socket : private bc::utils::noncopyable {
 public:
@@ -107,20 +169,16 @@ public:
         listen(backlog);
     }
 
-    template <domain Domain>
-    auto connect(address const &addr) -> void {
+    auto async_connect(address const &addr) -> detail::async_connect_awaiter {
         if (fd_ == 0) {
-            use_domain_(Domain);
+            use_domain_(addr.domain());
         }
         else {
-            assert(domain_ == Domain);
+            assert(domain_ == addr.domain());
             assert(role_ == role::UNDETERMINED);
         }
-        if (::connect(fd_, addr.sockaddr(), addr.socklen()) == -1) {
-            log::error("failed to connect socket to {}, fd: {}, errno: {}, message: {}", addr, fd_, errno, ::strerror(errno));
-            throw utils::trans_error_code(errno);
-        }
         role_ = role::PEER;
+        return {fd_, addr};
     }
 
     auto read(std::span<char> buffer) -> utils::expected<std::size_t, std::error_code> {

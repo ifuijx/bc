@@ -6,5 +6,6 @@
 #include "address.hpp"
 #include "socket.hpp"
 #include "server.hpp"
+#include "client.hpp"
 
 #endif /* __BC_NETWORK_H__ */
